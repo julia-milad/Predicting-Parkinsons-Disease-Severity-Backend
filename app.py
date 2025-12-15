@@ -25,7 +25,7 @@ EXPECTED_FEATURES = [
 def index():
     return "Server is running"
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['GET', 'POST'])
 def predict():
     try:
         data = request.get_json()
