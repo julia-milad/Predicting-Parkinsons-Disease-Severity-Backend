@@ -8,8 +8,10 @@ app = Flask(__name__)
 CORS(app)
 
 # Load the two models
-model_motor = joblib.load("models/park_xgb_motor_updrs.pkl")
-model_total = joblib.load("models/park_xgb_total_updrs.pkl")
+# model_motor = joblib.load("models/park_xgb_motor_updrs.pkl")
+# model_total = joblib.load("models/park_xgb_total_updrs.pkl")
+model_motor = joblib.load("models/park_xgb_motor_updrs_cpu.pkl")
+model_total = joblib.load("models/park_xgb_total_updrs_cpu.pkl")
 
 EXPECTED_FEATURES = [
     'age', 'sex', 'test_time',
