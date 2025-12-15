@@ -18,6 +18,10 @@ EXPECTED_FEATURES = [
     'NHR', 'HNR', 'RPDE', 'DFA', 'PPE'
 ]
 
+@app.route('/', methods=['GET'])
+def index():
+    return "Server is running"
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
