@@ -1,24 +1,29 @@
-# Use official Python image
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for caching
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install dependencies
+# Install system dependencies needed for some Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app
+# Copy the rest of your app
 COPY . .
 
-# Expose port (Railway will set PORT env variable)
+# Expose port
 EXPOSE 8000
 
-# Set environment variable for Flask
+# Flask environment variables
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
+ENV PORT=8000
 
-# Run the Flask app using the PORT environment variable if provided
-CMD ["sh", "-c", "flask run --port ${PORT:-8000}"]
+# Run the Flask app
+CMD ["flask", "run", "--port", "8000"]
