@@ -24,17 +24,6 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """
-    Expects JSON POST with keys matching EXPECTED_FEATURES.
-    Example:
-    {
-        "age": 60,
-        "sex": 1,
-        "test_time": 12,
-        "Jitter(%)": 0.2,
-        ...
-    }
-    """
     if not request.is_json:
         return jsonify({"error": "Content-Type must be application/json"}), 415
 
