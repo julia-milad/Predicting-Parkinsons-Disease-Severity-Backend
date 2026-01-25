@@ -2,15 +2,12 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
-import numpy as np
 import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the two models
-# model_motor = joblib.load("models/park_xgb_motor_updrs.pkl")
-# model_total = joblib.load("models/park_xgb_total_updrs.pkl")
+# Load the models
 model_motor = joblib.load("models/park_xgb_motor_updrs_cpu.pkl")
 model_total = joblib.load("models/park_xgb_total_updrs_cpu.pkl")
 
@@ -25,15 +22,34 @@ EXPECTED_FEATURES = [
 def index():
     return "Server is running"
 
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Expects JSON POST with keys matching EXPECTED_FEATURES.
+    Example:
+    {
+        "age": 60,
+        "sex": 1,
+        "test_time": 12,
+        "Jitter(%)": 0.2,
+        ...
+    }
+    """
+    if not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 415
+
     try:
         data = request.get_json()
 
-        # Create DataFrame with headers
+        # Validate missing features
+        missing = [f for f in EXPECTED_FEATURES if f not in data]
+        if missing:
+            return jsonify({"error": f"Missing features: {missing}"}), 400
+
+        # Create DataFrame
         df = pd.DataFrame([data], columns=EXPECTED_FEATURES)
 
-        # Predict using both models
+        # Predict
         motor_UPDRS = float(model_motor.predict(df)[0])
         total_UPDRS = float(model_total.predict(df)[0])
 
