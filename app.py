@@ -2,20 +2,28 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
+import xgboost as xgb
 import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the models
-model_motor = joblib.load("models/park_xgb_motor_updrs.pkl")
-model_total = joblib.load("models/park_xgb_total_updrs.pkl")
+# Load preprocessors
+pre_motor = joblib.load("models/pre_motor.pkl")
+pre_total = joblib.load("models/pre_total.pkl")
+
+# Load models
+model_motor = xgb.XGBRegressor()
+model_motor.load_model("models/motor.json")
+
+model_total = xgb.XGBRegressor()
+model_total.load_model("models/total.json")
 
 EXPECTED_FEATURES = [
-    'age', 'sex', 'test_time',
-    'Jitter(%)', 'Jitter:PPQ5',
-    'Shimmer(dB)', 'Shimmer:APQ5',
-    'NHR', 'HNR', 'RPDE', 'DFA', 'PPE'
+    'age','sex','test_time',
+    'Jitter(%)','Jitter:PPQ5',
+    'Shimmer(dB)','Shimmer:APQ5',
+    'NHR','HNR','RPDE','DFA','PPE'
 ]
 
 @app.route('/', methods=['GET'])
@@ -24,27 +32,24 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if not request.is_json:
-        return jsonify({"error": "Content-Type must be application/json"}), 415
-
     try:
         data = request.get_json()
 
-        # Validate missing features
         missing = [f for f in EXPECTED_FEATURES if f not in data]
         if missing:
-            return jsonify({"error": f"Missing features: {missing}"}), 400
+            return jsonify({"error": f"Missing: {missing}"}), 400
 
-        # Create DataFrame
         df = pd.DataFrame([data], columns=EXPECTED_FEATURES)
 
-        # Predict
-        motor_UPDRS = float(model_motor.predict(df)[0])
-        total_UPDRS = float(model_total.predict(df)[0])
+        df_motor = pre_motor.transform(df)
+        df_total = pre_total.transform(df)
+
+        motor_pred = float(model_motor.predict(df_motor)[0])
+        total_pred = float(model_total.predict(df_total)[0])
 
         return jsonify({
-            "motor_UPDRS": motor_UPDRS,
-            "total_UPDRS": total_UPDRS
+            "motor_UPDRS": motor_pred,
+            "total_UPDRS": total_pred
         })
 
     except Exception as e:
