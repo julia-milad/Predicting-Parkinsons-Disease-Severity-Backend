@@ -2,9 +2,13 @@ import os
 import pandas as pd
 import joblib
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from train import train_and_save_models
 
 app = Flask(__name__)
+
+# Enable CORS
+CORS(app)
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 TOTAL_MODEL_PATH = os.path.join(MODEL_DIR, "total_UPDRS.pkl")
@@ -17,10 +21,8 @@ FEATURES = [
     'NHR','HNR','RPDE','DFA','PPE'
 ]
 
-# Models initially not loaded
 total_model = None
 motor_model = None
-
 
 @app.route("/", methods=["GET"])
 def index():
